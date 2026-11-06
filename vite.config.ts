@@ -8,7 +8,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { TOOLS } from "./src/lib/tools";
 
 // BASE_PATH is set by the GitHub Pages workflow (e.g. "/my-repo/"). Defaults to "/".
-const base = process.env.BASE_PATH || "/";
+const base = process.env["BASE_PATH"] || "/";
 
 const pages = [
   { path: "/" },
