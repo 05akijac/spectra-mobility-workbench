@@ -5,11 +5,24 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { TOOLS } from "./src/lib/tools";
+
+// BASE_PATH is set by the GitHub Pages workflow (e.g. "/my-repo/"). Defaults to "/".
+const base = process.env.BASE_PATH || "/";
+
+const pages = [
+  { path: "/" },
+  { path: "/proteomics" },
+  ...TOOLS.filter((t) => t.status === "available").map((t) => ({ path: `/${t.category}/${t.slug}` })),
+];
 
 export default defineConfig({
+  vite: { base },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    pages,
+    prerender: { enabled: true, autoStaticPathsDiscovery: false },
   },
 });

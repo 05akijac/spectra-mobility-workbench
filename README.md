@@ -27,3 +27,8 @@ npm run dev
 - TypeScript
 - React
 - Tailwind CSS
+
+## Ion Tools — editing & hosting
+
+- **Add a tool:** add a line to `src/lib/tools.ts`, write its page (calculator + "How it works" + "Theory") in `src/tools/`, and register it in `src/tools/index.ts`. Formulas live in `src/lib/physics.ts` (tests: `bun run test`).
+- **GitHub Pages:** in your GitHub repo go to Settings → Pages → Source: "GitHub Actions". Every push to `main` runs `.github/workflows/deploy.yml` and publishes to `https://<user>.github.io/<repo>/`. For a custom domain, set `BASE_PATH: /` in the workflow.

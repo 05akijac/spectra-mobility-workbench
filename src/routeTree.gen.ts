@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProteomicsRouteImport } from './routes/proteomics'
+import { Route as CategoryToolRouteImport } from './routes/$category.$tool'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProteomicsRoute = ProteomicsRouteImport.update({
+  id: '/proteomics',
+  path: '/proteomics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategoryToolRoute = CategoryToolRouteImport.update({
+  id: '/$category/$tool',
+  path: '/$category/$tool',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/proteomics': typeof ProteomicsRoute
+  '/$category/$tool': typeof CategoryToolRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/proteomics': typeof ProteomicsRoute
+  '/$category/$tool': typeof CategoryToolRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/proteomics': typeof ProteomicsRoute
+  '/$category/$tool': typeof CategoryToolRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/proteomics' | '/$category/$tool'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/proteomics' | '/$category/$tool'
+  id: '__root__' | '/' | '/proteomics' | '/$category/$tool'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ProteomicsRoute: typeof ProteomicsRoute
+  CategoryToolRoute: typeof CategoryToolRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/proteomics': {
+      id: '/proteomics'
+      path: '/proteomics'
+      fullPath: '/proteomics'
+      preLoaderRoute: typeof ProteomicsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$category/$tool': {
+      id: '/$category/$tool'
+      path: '/$category/$tool'
+      fullPath: '/$category/$tool'
+      preLoaderRoute: typeof CategoryToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ProteomicsRoute: ProteomicsRoute,
+  CategoryToolRoute: CategoryToolRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

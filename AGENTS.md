@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- Tool registry `src/lib/tools.ts` drives menus, home page and prerender list; why: one place to add tools.
+- Site is fully prerendered static (GitHub Pages) with `BASE_PATH`-driven base/basepath; why: no server on Pages.
+- Physics formulas stay pure in `src/lib/physics.ts` with tests; why: verifiable and reusable.

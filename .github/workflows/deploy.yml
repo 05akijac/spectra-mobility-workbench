@@ -1,0 +1,43 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - name: Build static site
+        env:
+          # Served at https://<user>.github.io/<repo>/ . Use "/" for a custom domain.
+          BASE_PATH: /${{ github.event.repository.name }}/
+        run: bun run build
+      - name: Locate static output
+        id: out
+        run: |
+          DIR=$(dirname "$(find dist .output -name index.html -not -path '*/node_modules/*' | head -1)")
+          echo "dir=$DIR" >> "$GITHUB_OUTPUT"
+          touch "$DIR/.nojekyll"
+          cp "$DIR/index.html" "$DIR/404.html"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ steps.out.outputs.dir }}
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
