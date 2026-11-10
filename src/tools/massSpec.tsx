@@ -291,31 +291,144 @@ export function MfpTool() {
   );
 }
 
-export function ResolvingTool() {
+function ModeTabs({
+  value, options, onChange,
+}: { value: string; options: [string, string][]; onChange: (v: string) => void }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          onClick={() => onChange(id)}
+          className={
+            "rounded-md border px-4 py-2 text-sm transition-colors " +
+            (value === id
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-input bg-background text-muted-foreground hover:bg-secondary")
+          }
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function WidthMode() {
   const [m, setM] = useState(500);
   const [fwhm, setFwhm] = useState(0.01);
   const [m2, setM2] = useState(500.01);
   const R = P.resolvingPower(m, fwhm);
+  const Rv = P.resolvingPowerValley10(m, fwhm);
+  return (
+    <Calculator
+      inputs={<>
+        <Field label="Peak m/z" value={m} onChange={setM} />
+        <Field label="Peak width (FWHM)" unit="Th" value={fwhm} onChange={setFwhm} />
+        <Field label="Neighbouring peak m/z" value={m2} onChange={setM2} />
+      </>}
+      results={[
+        ["Resolving power, FWHM definition", P.fmt(R, 5)],
+        ["Resolving power, 10% valley definition", P.fmt(Rv, 5)],
+        ["10% valley separation ÷ FWHM", P.fmt(P.VALLEY10_FWHM_RATIO, 4)],
+        ["Peak width", `${P.fmt((fwhm / m) * 1e6)} ppm`],
+        ["R needed to separate the two peaks", P.fmt(m / Math.abs(m2 - m), 5)],
+      ]}
+    />
+  );
+}
+
+function QuadMode() {
+  const [mz, setMz] = useState(500);
+  const [r0, setR0] = useState(4);
+  const [f, setF] = useState(1);
+  const [L, setL] = useState(200);
+  const [ez, setEz] = useState(10);
+  const [eta, setEta] = useState(0.5);
+  const vz = P.axialVelocity(mz, ez);
+  const t = (L * 1e-3) / vz;
+  const N = P.rfCycleCount(f * 1e6, L * 1e-3, vz);
+  const Rideal = P.dawsonResolutionLimit(N);
+  const Rprac = eta * Rideal;
+  const { V, U } = P.qmfVoltages(mz, r0 * 1e-3, f * 1e6, 0.706, 0.237);
+  return (
+    <Calculator
+      inputs={<>
+        <Field label="m/z" unit="Th" value={mz} onChange={setMz} />
+        <Field label="Field radius r₀" unit="mm" value={r0} onChange={setR0} />
+        <Field label="RF frequency" unit="MHz" value={f} onChange={setF} />
+        <Field label="Filter length" unit="mm" value={L} onChange={setL} />
+        <Field label="Axial kinetic energy" unit="eV" value={ez} onChange={setEz} />
+        <Field label="Practical fraction of ideal, η" value={eta} onChange={setEta} />
+      </>}
+      results={[
+        ["Axial velocity v_z", `${P.fmt(vz)} m/s`],
+        ["Time in the filter", `${P.fmt(t * 1e6)} µs`],
+        ["RF cycles N = f L / v_z", P.fmt(N)],
+        ["RF amplitude V at the apex", `${P.fmt(V)} V`],
+        ["DC voltage U at the apex", `${P.fmt(U)} V`],
+        ["Ideal ceiling R = N² / 10.9", P.fmt(Rideal, 5)],
+        ["Practical benchmark R = η N² / 10.9", P.fmt(Rprac, 5)],
+        ["Peak width at the practical benchmark", `${P.fmt(mz / Rprac)} Th`],
+        ["Unit-mass resolution possible?", Rprac >= mz ? "Yes" : "No"],
+      ]}
+    />
+  );
+}
+
+export function ResolvingTool() {
+  const [mode, setMode] = useState("width");
   return (
     <>
-      <Calculator
-        inputs={<>
-          <Field label="Peak m/z" value={m} onChange={setM} />
-          <Field label="Peak width (FWHM)" unit="Th" value={fwhm} onChange={setFwhm} />
-          <Field label="Neighbouring peak m/z" value={m2} onChange={setM2} />
-        </>}
-        results={[
-          ["Resolving power m/Δm", P.fmt(R, 5)],
-          ["Peak width", `${P.fmt((fwhm / m) * 1e6)} ppm`],
-          ["R needed to separate the two peaks", P.fmt(m / Math.abs(m2 - m), 5)],
-        ]}
+      <ModeTabs
+        value={mode}
+        onChange={setMode}
+        options={[["width", "Peak width"], ["quad", "Quadrupole"]]}
       />
+      <div className="mt-4">
+        {mode === "quad" ? <QuadMode /> : <WidthMode />}
+      </div>
       <Section title="How it works">
-        <p>Resolving power uses the FWHM definition. The second result is the minimum resolving power needed for two peaks to be separated by one FWHM.</p>
+        <p><strong>Peak width mode</strong> turns a measured peak width into resolving power under both definitions, and reports the minimum resolving power needed to separate two peaks.</p>
+        <p><strong>Quadrupole mode</strong> derives the RF cycle count from the rod geometry, the drive frequency and the ion kinetic energy, then compares R against both a practical empirical benchmark and the theoretical ceiling.</p>
+        <p><strong>TOF mode</strong> builds a full time-domain noise budget — detector bandwidth, timing jitter, ion energy spread, extraction pulse width, and collision broadening from residual gas — added in quadrature to give achievable R. It will include reflectron mode, an optimum accelerating voltage finder and bottleneck identification. This mode is still in development.</p>
+      </Section>
+      <Section title="Definitions">
+        <p className="text-sm text-muted-foreground">Definitions taken from the mass spectrometry Oxford chemistry primer, by James S.O. McCullagh and Neil J. Oldham.</p>
+        <p>Resolving power is a measure of the ability of a mass analyser to provide a specified value of mass resolution.</p>
+        <p>Resolution, or the separation of m/z values in a mass spectrum, is given by the ratio</p>
+        <TeX block>{String.raw`R = \frac{m/z}{\Delta(m/z)}`}</TeX>
+        <p>There are two different ways of working out resolving power in quadrupole mass filters:</p>
+        <ul className="list-disc pl-6 space-y-1">
+          <li><strong>10% valley definition:</strong> defined by the separation in the m/z of two peak maxima of equal intensity resolved at 10% relative intensity.</li>
+          <li><strong>FWHM:</strong> full peak width at half maximum intensity.</li>
+        </ul>
+        <p>It is important to determine which definition is being used, as the FWHM value of R will be twice that determined using the 10% valley definition.</p>
+        <p>There are additional details such as Dawson's theoretical limit, which establishes the absolute mathematical ceiling for the mass resolution of an ideal quadrupole filter. I will add this detail later after studying it some more.</p>
       </Section>
       <Section title="Theory">
-        <TeX block>{String.raw`R = \frac{m}{\Delta m_{\text{FWHM}}}, \qquad \text{width (ppm)} = \frac{\Delta m}{m}\times 10^6`}</TeX>
+        <h3 className="font-serif text-xl text-foreground pt-2">FWHM and the 10% valley</h3>
+        <p>With the FWHM definition the peak width is measured across one peak at half its maximum height:</p>
+        <TeX block>{String.raw`R_{\text{FWHM}} = \frac{m}{\Delta m_{\text{FWHM}}}, \qquad \text{width (ppm)} = \frac{\Delta m}{m}\times 10^6`}</TeX>
+        <p>For the 10% valley definition, two peaks of equal height are just resolved when the dip between them falls to 10% of the peak height. If both peaks are Gaussian with standard deviation σ, the valley sits halfway between the two maxima, so</p>
+        <TeX block>{String.raw`2\exp\!\left(-\frac{d^2}{8\sigma^2}\right) = 0.1 \;\Rightarrow\; d = \sqrt{8\ln 20}\;\sigma = 4.896\,\sigma`}</TeX>
+        <p>while one peak has <TeX>{String.raw`\Delta m_{\text{FWHM}} = 2\sqrt{2\ln 2}\;\sigma = 2.355\,\sigma`}</TeX>. The separation needed for a 10% valley is therefore</p>
+        <TeX block>{String.raw`\frac{d}{\Delta m_{\text{FWHM}}} = \frac{\sqrt{8\ln 20}}{2\sqrt{2\ln 2}} = 2.079 \;\Rightarrow\; R_{10\%} \approx \frac{R_{\text{FWHM}}}{2}`}</TeX>
+        <p>which is why the definition must always be stated alongside a resolving power.</p>
+
+        <h3 className="font-serif text-xl text-foreground pt-2">Resolving power with m/z</h3>
         <p>Resolving power varies with m/z depending on the analyser: roughly constant for TOF, proportional to <TeX>{String.raw`1/\sqrt{m/z}`}</TeX> for Orbitrap, and proportional to <TeX>{String.raw`1/(m/z)`}</TeX> for FT-ICR.</p>
+
+        <h3 className="font-serif text-xl text-foreground pt-2">Quadrupole: the flight-time ceiling</h3>
+        <p>An ion with axial kinetic energy E_z travels the filter at</p>
+        <TeX block>{String.raw`v_z = \sqrt{\frac{2E_z}{m}}`}</TeX>
+        <p>where E_z is in joules (E_z [J] = e × E_z [eV]), so the number of RF cycles experienced inside the filter is</p>
+        <TeX block>{String.raw`N = f\,t = \frac{f L}{v_z}`}</TeX>
+        <p>Ions just outside the stability region need a finite number of cycles for their oscillation amplitude to grow to the rod, so a shorter stay accepts a wider band of m/z. When resolution is limited by residence time it follows R = Nⁿ/K with n ≈ 2; at the apex of stability zone 1 the simulations give</p>
+        <TeX block>{String.raw`R_{\text{ideal}} = \frac{N^2}{10.9}`}</TeX>
+        <p>in reasonable agreement with the earlier calculation of Paul et al. Real instruments fall short of this ceiling through field imperfections, misalignment, fringing fields and ion energy spread, so the calculator compares the ideal with a practical benchmark η·R_ideal that you set from your own instrument.</p>
+        <p className="text-sm text-muted-foreground">Ref: S. U. A. H. Syed, T. J. Hogan, M. J. Antony Joseph, S. Maher, S. Taylor, <em>J. Am. Soc. Mass Spectrom.</em> 24 (2013) 1493–1500, <a href="https://doi.org/10.1007/s13361-013-0704-z" target="_blank" rel="noreferrer" className="underline">doi.org/10.1007/s13361-013-0704-z</a>; P. H. Dawson (ed.), <em>Quadrupole Mass Spectrometry and its Applications</em>, Elsevier (1976).</p>
       </Section>
     </>
   );

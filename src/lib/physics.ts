@@ -82,6 +82,36 @@ export function resolvingPower(m: number, dm: number) {
   return m / dm;
 }
 
+/**
+ * Separation of two equal Gaussian peaks that just gives a 10% valley, as a
+ * multiple of the FWHM: d/FWHM = sqrt(8 ln 20) / (2 sqrt(2 ln 2)) ≈ 2.079.
+ */
+export const VALLEY10_FWHM_RATIO =
+  Math.sqrt(8 * Math.log(20)) / (2 * Math.sqrt(2 * Math.log(2)));
+
+/** Resolving power by the 10% valley definition, from the FWHM peak width. */
+export function resolvingPowerValley10(m: number, fwhm: number) {
+  return m / (VALLEY10_FWHM_RATIO * fwhm);
+}
+
+/** Axial velocity of an ion whose axial kinetic energy is energy_eV (eV). */
+export function axialVelocity(mass_Da: number, energy_eV: number) {
+  return Math.sqrt((2 * energy_eV * E) / (mass_Da * DA));
+}
+
+/** Number of RF cycles experienced crossing a filter of length L_m at v_z. */
+export function rfCycleCount(f_Hz: number, L_m: number, v_z: number) {
+  return (f_Hz * L_m) / v_z;
+}
+
+/**
+ * Resolution ceiling of an ideal zone-1 quadrupole set by finite flight time:
+ * R = N² / 10.9 (Hiroki et al. simulations, in agreement with Paul et al.).
+ */
+export function dawsonResolutionLimit(N: number) {
+  return (N * N) / 10.9;
+}
+
 /** Mason–Schamp: CCS (m^2) from reduced mobility K0 (m^2/V/s). */
 export function ccsFromK0(K0: number, ionMass_Da: number, gasMass_Da: number, z: number, T_K: number) {
   const mu = ((ionMass_Da * gasMass_Da) / (ionMass_Da + gasMass_Da)) * DA;

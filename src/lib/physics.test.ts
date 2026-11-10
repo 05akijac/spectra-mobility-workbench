@@ -28,4 +28,20 @@ describe("physics", () => {
     const { U, V } = P.qmfVoltages(500, 4e-3, 1e6, 0.706, 0.237);
     expect(U / V).toBeCloseTo(0.237 / (2 * 0.706), 9);
   });
+  it("10% valley separation is ~2.08 FWHM for Gaussian peaks", () => {
+    expect(P.VALLEY10_FWHM_RATIO).toBeCloseTo(2.0789, 4);
+    // so the 10% valley resolving power is about half the FWHM value
+    expect(P.resolvingPowerValley10(500, 0.01)).toBeCloseTo(24050.9, 0);
+    expect(P.resolvingPower(500, 0.01) / P.resolvingPowerValley10(500, 0.01))
+      .toBeCloseTo(2.0789, 4);
+  });
+  it("axial velocity of m/z 500 at 10 eV is ~1964 m/s", () => {
+    expect(P.axialVelocity(500, 10)).toBeCloseTo(1964.5, 0);
+  });
+  it("1 MHz over 200 mm at 1964.5 m/s is ~102 RF cycles", () => {
+    expect(P.rfCycleCount(1e6, 0.2, 1964.5)).toBeCloseTo(101.8, 0);
+  });
+  it("ideal zone-1 ceiling is N²/10.9", () => {
+    expect(P.dawsonResolutionLimit(100)).toBeCloseTo(917.43, 2);
+  });
 });
