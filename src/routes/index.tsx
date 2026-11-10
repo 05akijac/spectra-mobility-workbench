@@ -25,7 +25,10 @@ function Index() {
         Everything runs in your browser, it is made by lovable and hosted in GitHub.
 
 
-        Each tool page explains how the it works, the theory behind it and an example calculation. It also includes links to other websites containing MS tools. As I learn more, I will update with more tools, theory and examples...
+        Each tool page explains how the tool works, the theory behind it and an example calculation. It also includes links to other websites, papers and research groups MS tools.{"\u00a0"}
+
+
+        As I learn more, I will update with more tools, theory and examples...
       </p>
 
       <h2 className="mt-12 font-serif text-2xl text-foreground">Available tools</h2>
