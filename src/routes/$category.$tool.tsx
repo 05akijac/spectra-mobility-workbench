@@ -33,8 +33,14 @@ function ToolPage() {
     <article>
       <p className="text-xs uppercase tracking-widest text-primary">{cat}</p>
       <h1 className="mt-1 font-serif text-4xl text-foreground">{tool.name}</h1>
-      <p className="mt-2 mb-8 text-muted-foreground">{tool.summary}</p>
-      {Body && <Body />}
+      {tool.pending ? (
+        <p className="mt-4 text-muted-foreground">Pending…</p>
+      ) : (
+        <>
+          <p className="mt-2 mb-8 text-muted-foreground">{tool.summary}</p>
+          {Body && <Body />}
+        </>
+      )}
     </article>
   );
 }
