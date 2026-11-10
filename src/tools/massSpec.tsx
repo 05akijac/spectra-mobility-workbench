@@ -32,7 +32,7 @@ export function QmfTool() {
         <p className="text-sm text-muted-foreground">Ref: P. H. Dawson, <em>Quadrupole Mass Spectrometry and its Applications</em>, Elsevier (1976).</p>
       </Section>
       <Section title="Example">
-        <p>Mathieu stability presents an ideal mass pass band. This example initially does not include quadrupole length, ion kinetic energy or fringing fields. We need the field radius r₀ = 4 mm, a drive frequency of around 1 MHz, the target m/z (180) and the target resolution.</p>
+        <p>Mathieu stability presents an ideal mass pass band. This example initially does not include quadrupole length, ion kinetic energy or fringing fields (these will be included later on). We need the field radius r₀ = 4 mm, a drive frequency of around 1 MHz, the target m/z (180) and the target resolution.</p>
         <TeX block>{String.raw`\Omega = 2\pi f = 2 \times 3.141 \times 1\times10^{6} = 6.28\times10^{6}\ \text{rad/s}`}</TeX>
         <p>The mass window follows from the resolution R = m/z ÷ Δm/z:</p>
         <TeX block>{String.raw`\Delta(m/z) = \frac{180}{180} = 1\ \text{Th} \;\Rightarrow\; \text{stable window} = 179.5\text{–}180.5\ \text{Th}`}</TeX>
@@ -78,11 +78,11 @@ export function QmfTool() {
         <p>The later estimates each use the previous ones. They are then combined with their weights:</p>
         <TeX block>{String.raw`s_{n+1} = s_n + \frac{k_1 + 2k_2 + 2k_3 + k_4}{6}`}</TeX>
         <p>giving the new position and velocity after 10 ns: x = 0.1000579 mm and vₓ = 11.5783 m/s — the ion has moved about 0.058 µm in the x direction.</p>
-        <p>For our 180 Da ion with 10 eV axial kinetic energy, the ion takes 30.54 µs to traverse the 100 mm quadrupole. At 10 ns per step, that is 30,540 ns ÷ 10 ns ≈ 3,054 RK4 steps. Working this out really makes you appreciate the intricacies of quadrupole mass spectrometers — and the computers that do this in incredibly short periods of time.</p>
-        <p>To add more detail: what happens if ions have larger energies than 10 eV, or enter at an angle? An ion at 181 or 182 Th with a larger axial kinetic energy undergoes fewer oscillations because it spends less time in the quadrupole. Even if it is mathematically unstable in the infinite-duration analysis, it can escape before its amplitude grows enough to hit a rod, and still reach the detector. If an ion enters at 2° to the axis, v<sub>z</sub> = v cos(2°), so at 10 eV it would have a transverse velocity of about 114 m/s. RK4 must then include this initial transverse velocity, which changes the trajectory and may cause an otherwise stable ion to strike an electrode.</p>
+        <p>For our 180 Da ion with 10 eV axial kinetic energy, the ion takes 30.54 µs to traverse the 100 mm quadrupole. At 10 ns per step, that is 30,540 ns ÷ 10 ns ≈ 3,054 RK4 steps.<br /><br /><br />Working this out has really made me appreciate the intricacies of quadrupole mass spectrometers, and the computers that do this in incredibly short periods of time.</p>
+        <p>To add more detail: what happens if ions have larger energies than 10 eV, or enter at an angle? <br /><br /><br />An ion at 181 or 182 Th with a larger axial kinetic energy undergoes fewer oscillations because it spends less time in the quadrupole. Even if it is mathematically unstable in the infinite-duration analysis, it can escape before its amplitude grows enough to hit a rod, and still reach the detector. If an ion enters at 2° to the axis, v<sub>z</sub> = v cos(2°), so at 10 eV it would have a transverse velocity of about 114 m/s. RK4 must then include this initial transverse velocity, which changes the trajectory and may cause an otherwise stable ion to strike an electrode.</p>
         <p>The mass-transmission curve is then:</p>
         <TeX block>{String.raw`T(m/z) = \frac{\text{ions exiting the 100 mm quadrupole}}{\text{ions injected}} \times 100\%`}</TeX>
-        <p className="text-sm text-muted-foreground">Further reading: R. L. Schrader, <em>J. Am. Soc. Mass Spectrom.</em> (2024), <a href="https://doi.org/10.1021/jasms.4c00051" target="_blank" rel="noreferrer" className="underline">doi.org/10.1021/jasms.4c00051</a>; videos by Phanimations and Steve Brunton on numerical integration.</p>
+        <p className="text-sm text-muted-foreground">Further reading: R. L. Schrader, <em>J. Am. Soc. Mass Spectrom.</em> (2024), <a href="https://doi.org/10.1021/jasms.4c00051" target="_blank" rel="noreferrer" className="underline">doi.org/10.1021/jasms.4c00051</a>; videos by Phanimations and Steve Brunton on numerical integration.<br /><br />These are excellent resources to find out more.</p>
       </Section>
     </>
   );
