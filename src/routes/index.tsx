@@ -19,10 +19,13 @@ function Index() {
     <div>
       <h1 className="font-serif text-4xl text-foreground sm:text-5xl">Welcome :)</h1>
       <p className="mt-4 max-w-prose text-lg text-muted-foreground">
-        This is a collection of tools for mass spectrometry, ion mobility and proteomics. Everything runs in your browser. Each tool page explains how the tool works, the theory behind it and an example calculation. It also includes links to other websites containing MS tools.
+        This is a collection of tools for mass spectrometry, ion mobility and proteomics.
 
 
-        As I learn more, I will update with more tools, theory and examples
+        Everything runs in your browser, it is made by lovable and hosted in GitHub.
+
+
+        Each tool page explains how the it works, the theory behind it and an example calculation. It also includes links to other websites containing MS tools. As I learn more, I will update with more tools, theory and examples...
       </p>
 
       <h2 className="mt-12 font-serif text-2xl text-foreground">Available tools</h2>
