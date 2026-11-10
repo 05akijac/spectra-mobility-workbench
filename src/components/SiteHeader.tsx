@@ -9,7 +9,7 @@ export function SiteHeader() {
   return (
     <header className="border-b bg-background">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4">
-        <Link to="/" className="font-serif text-xl text-foreground">Ion Tools</Link>
+        <Link to="/" className="font-serif text-xl text-foreground">MS Library</Link>
         <nav className="flex flex-wrap gap-1">
           {CATEGORIES.map((c) => (
             <DropdownMenu key={c.id}>

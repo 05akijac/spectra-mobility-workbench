@@ -17,9 +17,12 @@ function Index() {
   const dev = TOOLS.filter((t) => t.status === "development");
   return (
     <div>
-      <h1 className="font-serif text-4xl text-foreground sm:text-5xl">Welcome</h1>
+      <h1 className="font-serif text-4xl text-foreground sm:text-5xl">Welcome :)</h1>
       <p className="mt-4 max-w-prose text-lg text-muted-foreground">
-        A collection of simple calculators for mass spectrometry, ion mobility and proteomics. Everything runs in your browser. Each tool page explains how the tool works and the theory behind it.
+        This is a collection of tools for mass spectrometry, ion mobility and proteomics. Everything runs in your browser. Each tool page explains how the tool works, the theory behind it and an example calculation. It also includes links to other websites containing MS tools.
+
+
+        As I learn more, I will update with more tools, theory and examples
       </p>
 
       <h2 className="mt-12 font-serif text-2xl text-foreground">Available tools</h2>
