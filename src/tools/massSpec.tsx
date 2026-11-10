@@ -146,8 +146,8 @@ export function KeTool() {
       </Section>
       <Section title="Theory">
         <TeX block>{String.raw`E_k = zeV = \tfrac{1}{2} m v^2 \;\Rightarrow\; v = \sqrt{\frac{2zeV}{m}}, \qquad t = \frac{L}{v} = L\sqrt{\frac{m}{2zeV}}`}</TeX>
-        <p>Flight time scales with <TeX>{String.raw`\sqrt{m/z}`}</TeX>, which is the basis of TOF mass analysis. This is a non-relativistic treatment, which is accurate for typical MS energies.<br /><br /><br />I'm looking at including a tool that accounts for</p>
-        <div>I'm looking at including a relativistic check soon..</div>
+        <p>Flight time scales with <TeX>{String.raw`\sqrt{m/z}`}</TeX>, which is the basis of TOF mass analysis. This is a non-relativistic treatment, which is accurate for typical MS energies.<br /><br /><br />I'm looking at including a relativistic check soon and a collision induced dissociation tool too..<br /><br /><br /></p>
+        <div>{"\n"}</div>
       </Section>
     </>
   );
