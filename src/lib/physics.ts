@@ -49,6 +49,21 @@ export function meanSpeed(T_K: number, mass_Da: number) {
   return Math.sqrt((8 * KB * T_K) / (Math.PI * mass_Da * DA));
 }
 
+/** Knudsen number Kn = λ / L (both in the same length unit). */
+export function knudsenNumber(lambda: number, L: number) {
+  return lambda / L;
+}
+
+export type FlowRegime = "Continuum" | "Slip" | "Transition" | "Free molecular";
+
+/** Flow regime from Kn: <0.001 continuum, 0.001–0.1 slip, 0.1–10 transition, >10 free molecular. */
+export function flowRegime(Kn: number): FlowRegime {
+  if (Kn < 0.001) return "Continuum";
+  if (Kn < 0.1) return "Slip";
+  if (Kn <= 10) return "Transition";
+  return "Free molecular";
+}
+
 /** Choked (sonic) mass flow through a thin orifice, kg/s. */
 export function chokedMassFlow(area_m2: number, p0_Pa: number, T_K: number, M_kgmol: number, gamma: number, Cd = 1) {
   const Rs = R_GAS / M_kgmol;

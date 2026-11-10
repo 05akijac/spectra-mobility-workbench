@@ -230,8 +230,10 @@ export function MfpTool() {
   const [T, setT] = useState(300);
   const [d, setD] = useState(0.37);
   const [m, setM] = useState(28);
+  const [L, setL] = useState(100);
   const lam = P.meanFreePath(T, p * 100, d * 1e-9);
   const v = P.meanSpeed(T, m);
+  const Kn = P.knudsenNumber(lam, L * 1e-3);
   return (
     <>
       <Calculator
@@ -240,20 +242,50 @@ export function MfpTool() {
           <Field label="Temperature" unit="K" value={T} onChange={setT} />
           <Field label="Molecular diameter (N₂ ≈ 0.37)" unit="nm" value={d} onChange={setD} />
           <Field label="Particle mass" unit="Da" value={m} onChange={setM} />
+          <Field label="Characteristic length L (e.g. chamber size)" unit="mm" value={L} onChange={setL} />
         </>}
         results={[
           ["Mean free path λ", `${P.fmt(lam * 1000)} mm`],
           ["Number density n", `${P.fmt((p * 100) / (P.KB * T))} m⁻³`],
           ["Mean speed v̄", `${P.fmt(v)} m/s`],
           ["Collision frequency ν", `${P.fmt(v / lam)} s⁻¹`],
+          ["Knudsen number Kn = λ/L", P.fmt(Kn)],
+          ["Flow regime", P.flowRegime(Kn)],
         ]}
       />
       <Section title="How it works">
-        <p>The tool uses kinetic gas theory for a single gas of hard spheres. The collision frequency is the mean speed divided by the mean free path.</p>
+        <p>The tool uses kinetic gas theory for a single gas of hard spheres. The collision frequency is the mean speed divided by the mean free path. The Knudsen number compares the mean free path with the size of your system to show how the gas behaves.</p>
       </Section>
       <Section title="Theory">
-        <TeX block>{String.raw`\lambda = \frac{k_B T}{\sqrt{2}\,\pi d^2 p}, \qquad \bar v = \sqrt{\frac{8k_BT}{\pi m}}, \qquad \nu = \frac{\bar v}{\lambda} = \sqrt{2}\,n\,\pi d^2\,\bar v`}</TeX>
-        <p>The <TeX>{String.raw`\sqrt 2`}</TeX> factor accounts for the relative motion of the colliding molecules. For an ion in a different buffer gas, use the reduced mass and the collision cross section instead.</p>
+        <p className="text-sm text-muted-foreground">The physics is taken from the University of Virginia physics classes.</p>
+        <h3 className="font-serif text-xl text-foreground pt-2">Mean free path</h3>
+        <p>The mean free path, the average distance a gas molecule travels between collisions, can be estimated from kinetic theory:</p>
+        <TeX block>{String.raw`\lambda = \frac{\text{total distance travelled}}{\text{number of collisions}} = \frac{L}{\pi d^2 L\, n} = \frac{1}{\pi d^2 n}`}</TeX>
+        <p>Here <TeX>{String.raw`\pi d^2`}</TeX> is the collision cross section. Two spheres of diameter d collide if their centres come within d of each other; adding their two radii gives the full molecular diameter. n is the number of molecules per unit volume.</p>
+        <p>This first definition assumes the other molecules are at rest, but they are all moving. A molecule of O₂, for example, moves at around 460 m/s at room temperature and pressure. Because the directions are random, the velocities average to zero, so we use the root-mean-square velocity instead. The mean square of the relative velocity is twice the mean square velocity, so the rms relative velocity is larger by a factor of <TeX>{String.raw`\sqrt 2`}</TeX>. The collision rate goes up by this factor, and the mean free path goes down by it:</p>
+        <TeX block>{String.raw`\lambda = \frac{1}{\sqrt{2}\,\pi d^2 n}`}</TeX>
+        <p>From the ideal gas law, <TeX>{String.raw`n = p / k_B T`}</TeX>, so we can substitute in pressure, the Boltzmann constant and temperature. The Boltzmann constant relates the average kinetic energy of the particles in a gas to its thermodynamic temperature.</p>
+        <TeX block>{String.raw`\lambda = \frac{k_B T}{\sqrt{2}\,\pi d^2 p}`}</TeX>
+
+        <h3 className="font-serif text-xl text-foreground pt-2">Collision frequency</h3>
+        <p>Collision frequency is the average number of collisions a particle makes per unit time (see Chemistry LibreTexts):</p>
+        <TeX block>{String.raw`Z = \frac{\text{volume of collision cylinder} \times \text{number density}}{\text{time}}`}</TeX>
+        <p>The volume of the collision cylinder is <TeX>{String.raw`\pi d^2 \times \text{length}`}</TeX>. The length is the distance swept out in time t at the mean relative speed, <TeX>{String.raw`\sqrt{2}\,\langle c\rangle\, t`}</TeX>, where the mean speed is</p>
+        <TeX block>{String.raw`\langle c\rangle = \bar v = \sqrt{\frac{8 k_B T}{\pi m}}`}</TeX>
+        <p>The number density comes from the pressure through the ideal gas law, <TeX>{String.raw`N/V = p / k_B T`}</TeX>. Substituting into the full equation:</p>
+        <TeX block>{String.raw`Z = \sqrt{2}\,\pi d^2 \langle c\rangle \frac{N}{V} = \frac{\langle c\rangle}{\lambda}`}</TeX>
+
+        <h3 className="font-serif text-xl text-foreground pt-2">Knudsen number</h3>
+        <p>The Knudsen number is a dimensionless quantity from fluid mechanics. It is the ratio of the molecular mean free path λ to a characteristic length scale L of the system (for example a chamber, tube or orifice diameter):</p>
+        <TeX block>{String.raw`Kn = \frac{\lambda}{L}`}</TeX>
+        <p>The value of Kn tells you how the gas behaves in a given environment:</p>
+        <ul className="list-disc pl-6 space-y-1">
+          <li><strong>Continuum flow (Kn &lt; 0.001):</strong> the mean free path is tiny compared with the system, so the gas acts like a smooth, continuous substance.</li>
+          <li><strong>Slip flow (0.001 &lt; Kn &lt; 0.1):</strong> gas molecules begin to slip slightly along solid surfaces rather than coming to a dead stop.</li>
+          <li><strong>Transition flow (0.1 &lt; Kn &lt; 10):</strong> the continuum assumption breaks down significantly. Both molecular collisions and surface interactions matter.</li>
+          <li><strong>Free molecular flow (Kn &gt; 10):</strong> the mean free path is much larger than the object or channel. Molecules hit the walls far more often than each other. This is typical of high-vacuum systems such as mass spectrometers.</li>
+        </ul>
+        <p>For an ion in a different buffer gas, use the reduced mass and the collision cross section instead.</p>
       </Section>
     </>
   );
