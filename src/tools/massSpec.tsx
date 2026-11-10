@@ -31,6 +31,59 @@ export function QmfTool() {
         <p>where V is the zero-to-peak RF amplitude between a rod and the axis, and U is the DC voltage. Scanning U and V together at a fixed ratio <TeX>{String.raw`U/V = a/2q \approx 0.168`}</TeX> sweeps successive m/z values through the stability apex.</p>
         <p className="text-sm text-muted-foreground">Ref: P. H. Dawson, <em>Quadrupole Mass Spectrometry and its Applications</em>, Elsevier (1976).</p>
       </Section>
+      <Section title="Example">
+        <p>Mathieu stability presents an ideal mass pass band. This example initially does not include quadrupole length, ion kinetic energy or fringing fields. We need the field radius r₀ = 4 mm, a drive frequency of around 1 MHz, the target m/z (180) and the target resolution.</p>
+        <TeX block>{String.raw`\Omega = 2\pi f = 2 \times 3.141 \times 1\times10^{6} = 6.28\times10^{6}\ \text{rad/s}`}</TeX>
+        <p>The mass window follows from the resolution R = m/z ÷ Δm/z:</p>
+        <TeX block>{String.raw`\Delta(m/z) = \frac{180}{180} = 1\ \text{Th} \;\Rightarrow\; \text{stable window} = 179.5\text{–}180.5\ \text{Th}`}</TeX>
+        <p>Now we work out the RF amplitude and DC voltage, then the peak-to-peak voltage needed for a stable ion trajectory. The apex of the first stability region is a = 0.237, q = 0.706 — the point where the upper and lower stability boundaries of the first zone intersect, giving maximum resolving power when operated as a mass filter. The ratio a/q gives the scan-line slope of ~0.33.</p>
+        <p>Using an ion mass of 180 amu = 2.989 × 10⁻²⁵ kg, rearrange the q parameter for voltage:</p>
+        <TeX block>{String.raw`q = \frac{4eV}{m r_0^2 \Omega^2} \;\Rightarrow\; V = \frac{q\, m r_0^2 \Omega^2}{4e} = \frac{0.704698 \times 2.989\times10^{-25} \times (4\times10^{-3})^2 \times (6.28\times10^{6})^2}{4 \times 1.6\times10^{-19}} = 207.9\ \text{V}`}</TeX>
+        <p>Then for the DC voltage, using a = 0.235570:</p>
+        <TeX block>{String.raw`U = \frac{a\, m r_0^2 \Omega^2}{8e} = 34.70\ \text{V}`}</TeX>
+        <p>The peak-to-peak voltage for each rod pair relative to the centre potential is V<sub>RF,pp</sub> = 2V = 415.21 V, and between opposing rod pairs the differential RF peak-to-peak voltage is 830.42 V. The rod potentials are therefore:</p>
+        <TeX block>{String.raw`\Phi = \pm U + V\cos(\Omega t) = \pm 34.70 + 207.60\cos(\Omega t)`}</TeX>
+        <p>We now have the voltages needed to produce a stable electric field for ions at m/z 180. Next we need the ion's trajectory through the quadrupole: does it remain stable, or does the amplitude grow until it hits a rod or the analyser wall?</p>
+        <p>You could use an Euler integrator, but the implicit Euler method does not conserve energy and the amplitude grows over time — imagine a spring whose oscillations get larger after you let go, with no external energy added. We need a method that is numerically stable and does not magnify small errors into massive ones. Two helpful YouTube videos by Phanimations and Steve Brunton are linked below.</p>
+        <p>We use the 4th-order Runge–Kutta (RK4) method to solve the ordinary differential equation. It takes four derivative estimates per step and averages them with different weights:</p>
+        <ol className="list-decimal pl-6 space-y-1">
+          <li>acceleration at the beginning of the interval (k₁)</li>
+          <li>acceleration halfway through, using a first prediction (k₂)</li>
+          <li>an improved halfway prediction (k₃)</li>
+          <li>acceleration at the end of the interval (k₄)</li>
+        </ol>
+        <p>RK4 needs first-order equations, so the Mathieu equation is split using v = dx/dt:</p>
+        <TeX block>{String.raw`\frac{dv}{dt} = -\frac{\Omega^2}{4}\,(a - 2q\cos\Omega t)\,x`}</TeX>
+        <p>Applying this to our example: at 1 MHz the RF period is 1 µs, and dividing it into 100 steps gives h = 10 ns. Start at t = 0, x = 0.0001 m, v = 0, with a = 0.235570, q = 0.704698, ion mass 180 Da, axial kinetic energy 10 eV and Ω = 6.2832 × 10⁶ rad/s. The four estimates are:</p>
+        <TeX block>{String.raw`k_1 = hF(t, s), \quad k_2 = hF\!\left(t+\tfrac{h}{2}, s+\tfrac{k_1}{2}\right), \quad k_3 = hF\!\left(t+\tfrac{h}{2}, s+\tfrac{k_2}{2}\right), \quad k_4 = hF(t+h, s+k_3)`}</TeX>
+        <div className="overflow-x-auto">
+          <table className="text-sm border-collapse">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left pr-6 py-1">Estimate</th>
+                <th className="text-left pr-6 py-1">Change in x (m)</th>
+                <th className="text-left py-1">Change in velocity (m/s)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b"><td className="pr-6 py-1">k₁</td><td className="pr-6 py-1">0</td><td className="py-1">11.5852</td></tr>
+              <tr className="border-b"><td className="pr-6 py-1">k₂</td><td className="pr-6 py-1">5.7926 × 10⁻⁸</td><td className="py-1">11.5783</td></tr>
+              <tr className="border-b"><td className="pr-6 py-1">k₃</td><td className="pr-6 py-1">5.7926 × 10⁻⁸</td><td className="py-1">11.5817</td></tr>
+              <tr><td className="pr-6 py-1">k₄</td><td className="pr-6 py-1">1.1582 × 10⁻⁷</td><td className="py-1">11.5644</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>For k₁, the change in x is zero because vₓ = 0 at the start. The change in velocity is:</p>
+        <TeX block>{String.raw`k_{1,v} = -h\,\frac{\Omega^2}{4}(a - 2q\cos\Omega t)\,x = -10^{-8} \times \frac{(6.2823\times10^{6})^2}{4} \times (0.235570 - 2(0.704698)\cos 0) \times 0.0001 = 11.5852\ \text{m/s}`}</TeX>
+        <p>The later estimates each use the previous ones. They are then combined with their weights:</p>
+        <TeX block>{String.raw`s_{n+1} = s_n + \frac{k_1 + 2k_2 + 2k_3 + k_4}{6}`}</TeX>
+        <p>giving the new position and velocity after 10 ns: x = 0.1000579 mm and vₓ = 11.5783 m/s — the ion has moved about 0.058 µm in the x direction.</p>
+        <p>For our 180 Da ion with 10 eV axial kinetic energy, the ion takes 30.54 µs to traverse the 100 mm quadrupole. At 10 ns per step, that is 30,540 ns ÷ 10 ns ≈ 3,054 RK4 steps. Working this out really makes you appreciate the intricacies of quadrupole mass spectrometers — and the computers that do this in incredibly short periods of time.</p>
+        <p>To add more detail: what happens if ions have larger energies than 10 eV, or enter at an angle? An ion at 181 or 182 Th with a larger axial kinetic energy undergoes fewer oscillations because it spends less time in the quadrupole. Even if it is mathematically unstable in the infinite-duration analysis, it can escape before its amplitude grows enough to hit a rod, and still reach the detector. If an ion enters at 2° to the axis, v<sub>z</sub> = v cos(2°), so at 10 eV it would have a transverse velocity of about 114 m/s. RK4 must then include this initial transverse velocity, which changes the trajectory and may cause an otherwise stable ion to strike an electrode.</p>
+        <p>The mass-transmission curve is then:</p>
+        <TeX block>{String.raw`T(m/z) = \frac{\text{ions exiting the 100 mm quadrupole}}{\text{ions injected}} \times 100\%`}</TeX>
+        <p className="text-sm text-muted-foreground">Further reading: R. L. Schrader, <em>J. Am. Soc. Mass Spectrom.</em> (2024), <a href="https://doi.org/10.1021/jasms.4c00051" target="_blank" rel="noreferrer" className="underline">doi.org/10.1021/jasms.4c00051</a>; videos by Phanimations and Steve Brunton on numerical integration.</p>
+      </Section>
     </>
   );
 }
